@@ -1,4 +1,7 @@
-{{movie.id}}
-{{movie.title}}
-{{movie.budget}}
-{{movie.genres}}
+{% extends 'base.html' %}
+{% block content %}
+    {{movie.id}}
+    {{movie.title}}
+    {{movie.budget}}
+    {{movie.genres}}
+{% endblock %}
