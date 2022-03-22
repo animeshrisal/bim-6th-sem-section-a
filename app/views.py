@@ -4,13 +4,30 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 
-from .forms import MovieForm
-from .models import Movie
+from .forms import MovieForm, ReviewForm
+from .models import Movie, Review
 
 def get_movie(request, id):
     try:
+        review_form = ReviewForm()
+        if request.method == 'POST':
+            review_form = ReviewForm(request.POST)
+            if review_form.is_valid():
+                review = review_form.save(commit=False)
+                review.movie_id = id
+                review.user_id = request.user.id
+                review.save()
+
         movie = Movie.objects.get(pk=id)
-        return render(request, 'movie.html', {'movie': movie})
+
+        reviews = Review.objects.filter(
+            movie=movie
+        ).order_by('-created_at')[0:4]
+        
+        return render(request, 'movie.html', {'movie': movie,             
+            'reviews': reviews,
+            'review_form': review_form})
+            
     except Movie.DoesNotExist:
         return render(request, '404.html')
 
@@ -98,7 +115,8 @@ def signup(request):
         if form.is_valid():
             form.save()
             user = authenticate(
-                username=form.cleaned_data['username'], password=form.cleaned_data['password1'])
+                username=form.cleaned_data['username'],
+                password=form.cleaned_data['password1'])
             login(request, user)
             return redirect('/movies/')
 
