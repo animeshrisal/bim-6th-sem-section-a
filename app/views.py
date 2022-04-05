@@ -19,13 +19,7 @@ def get_movie(request, id):
                 review.save()
 
         movie = Movie.objects.get(pk=id)
-        context = {
-            'is_favorite': False
-        }
 
-        if movie.favorite.filter(pk=request.user.pk).exists():
-            context['is_favorite'] = True
-        
         reviews = Review.objects.filter(
             movie=movie
         ).order_by('-created_at')[0:4]
@@ -33,7 +27,6 @@ def get_movie(request, id):
         return render(request, 'movie.html', {'movie': movie,             
             'reviews': reviews,
             'review_form': review_form,
-            'context': context
             })
             
     except Movie.DoesNotExist:
