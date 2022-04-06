@@ -22,4 +22,5 @@ urlpatterns = [
     path('user_favorites/', 
             views.get_user_favorites, 
             name="Get User Favorites"),
+    path('upload_dataset/', views.upload_dataset, name="Upload dataset"),
 ]

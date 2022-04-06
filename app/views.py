@@ -4,8 +4,12 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 
-from .forms import MovieForm, ReviewForm
+from .forms import MovieForm, ReviewForm, UploadForm
 from .models import Movie, Review
+from django.db import transaction
+import pandas as pd
+
+import math
 
 def get_movie(request, id):
     try:
@@ -43,9 +47,28 @@ def about(request):
 def number(request, id):
     return HttpResponse(id)
 
-def get_movies(request):
-    movies = Movie.objects.all()
-    return render(request, 'movies.html', {'movies': movies})
+def get_movies(request, page_number):
+    page_size = 10
+
+    if page_number < 1:
+        page_number = 1
+
+    movie_count = Movie.objects.count()
+
+    last_page = math.ceil(movie_count / page_size)
+
+    pagination = {
+        'previous_page': page_number - 1,
+        'current_page': page_number,
+        'next_page': page_number + 1,
+        'last_page': last_page
+    }
+
+    movies = Movie.objects.all()[(page_number-1)
+                                 * page_size:page_number*page_size]
+
+    return render(request, 'movies.html',
+     {'movies': movies, 'pagination': pagination})
 
 def post_movie(request):
     movie_form = MovieForm()
@@ -141,3 +164,39 @@ def remove_from_favorites(request, id):
 def get_user_favorites(request):
     movies = request.user.favorite.all()
     return render(request, 'user_favorite.html', {'movies': movies})
+
+def upload_dataset(request):
+    file_form = UploadForm()
+    error_messages = {}
+
+    if request.method == "POST":
+        file_form = UploadForm(request.POST, request.FILES)
+        try:
+            if file_form.is_valid():
+                dataset = pd.read_csv(request.FILES['file'])
+                new_movies_list = []
+                dataset['budget'] = dataset['budget'].fillna(0)
+                with transaction.atomic():
+                    for index, row in dataset.iterrows():
+                        movie = Movie(
+                            title=row['title'],
+                            budget=row['budget'],
+                            genres=row['genres'],
+                            keywords=row['keywords'],
+                            overview=row['overview'],
+                            tagline=row['tagline'],
+                            cast=row['cast'],
+                            director=row['director']
+                        )
+
+                        new_movies_list.append(movie)
+                
+                Movie.objects.bulk_create(new_movies_list)
+                return redirect('/movies/page/1')
+
+        except Exception as e:
+            print(e)
+            error_messages['error'] = e
+
+    return render(request, 'upload_dataset.html', 
+    {'form': file_form, 'error_messages': error_messages})
