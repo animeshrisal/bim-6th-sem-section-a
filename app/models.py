@@ -13,8 +13,16 @@ class Movie(models.Model):
     director = models.CharField(max_length=100, blank=True, null=True)
     favorite = models.ManyToManyField(User, related_name='favorite')
 
+    def get_yen(self):
+        return self.budget * 122
+
     def __str__(self):
         return self.title
+
+class MovieVisitLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    visited_on = models.DateTimeField(auto_now=True)
 
 class Review(models.Model):
     review = models.CharField(max_length=200)

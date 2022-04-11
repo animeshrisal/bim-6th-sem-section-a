@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+    
+    <form method="GET" >
+        <input type="text" name="search" value="{{search_term}}">
+        <input type="submit" />
+    </form>
+
+    {% if movies|length > 0 %}
+        {% for movie in movies %}
+            <div>
+                {{movie.id}}
+                {{movie.title}}
+                {{movie.budget}}
+                {{movie.genres}}
+                <a href = "/movies/{{movie.id}}">Go to detail</a>
+                <a href = "/update_movie/{{movie.id}}">Update</a>
+                <!-- <a href = "/delete_movie/{{movie.id}}">Delete</a> -->
+            </div>
+        {% endfor %}
+    {% else %}
+            Could not find movie 
+    {% endif %}
+{% endblock %}

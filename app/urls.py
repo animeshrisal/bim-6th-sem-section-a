@@ -6,6 +6,7 @@ urlpatterns = [
     path('about/', views.about),
     path('number/<int:id>/', views.number),
     path('movies/<int:id>/', views.get_movie),
+    # path('movies/<int:movie_id>/reviews', views.movie_reviews()),
     path('movies/page/<int:page_number>/', views.get_movies),
     path('post_movie/', views.post_movie),
     path('update_movie/<int:id>/', views.update_movie),
@@ -22,5 +23,8 @@ urlpatterns = [
     path('user_favorites/', 
             views.get_user_favorites, 
             name="Get User Favorites"),
-    path('upload_dataset/', views.upload_dataset, name="Upload dataset"),
+    path('upload_dataset/', 
+                views.upload_dataset, 
+                name="Upload dataset"),
+    path('search_movies/', views.search_movies) 
 ]

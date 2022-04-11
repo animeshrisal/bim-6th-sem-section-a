@@ -1,11 +1,13 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 
-from .forms import MovieForm, ReviewForm, UploadForm
-from .models import Movie, Review
+from app.ml import get_recommendation_for_movie
+
+from .forms import MovieForm, ReviewForm, UploadForm, UserCreationForm
+from .models import Movie, MovieVisitLog, Review
 from django.db import transaction
 import pandas as pd
 
@@ -23,6 +25,9 @@ def get_movie(request, id):
                 review.save()
 
         movie = Movie.objects.get(pk=id)
+        movie_ids = get_recommendation_for_movie(id)
+
+        recommended_movies = Movie.objects.filter(id__in=movie_ids)
 
         reviews = Review.objects.filter(
             movie=movie
@@ -31,6 +36,7 @@ def get_movie(request, id):
         return render(request, 'movie.html', {'movie': movie,             
             'reviews': reviews,
             'review_form': review_form,
+            'recommended_movies': recommended_movies
             })
             
     except Movie.DoesNotExist:
@@ -105,7 +111,6 @@ def update_movie(request, id):
         if movie_form.is_valid():
             movie_form.save()
             return redirect('/movies/{}'.format(id))
-
  
     movie_form = MovieForm(instance=movie)
 
@@ -200,3 +205,13 @@ def upload_dataset(request):
 
     return render(request, 'upload_dataset.html', 
     {'form': file_form, 'error_messages': error_messages})
+
+def search_movies(request):
+    search_term = request.GET.get('search', '')
+    if search_term != '':
+        movies = Movie.objects.filter(title__contains=search_term)
+    else:
+        movies = []
+    return render(request, 'search.html', {'movies': movies, 'search_term': search_term})
+
+    
